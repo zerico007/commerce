@@ -1,0 +1,87 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+<div>
+    <strong>Listing: {{ listing.title }}</strong>
+</div><br>
+{% if user.is_authenticated %}
+{% if message %}
+{{ message }}
+{% endif %}
+<form class="form-group" action="{% url 'watchlist' %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="listing" id="listing" value="{{ listing.title }}">
+    <button class="btn btn-secondary" type="submit">Watchlist</button>
+</form><br>
+{% endif %}
+<div>
+    <img src="{{ listing.listing_photo.url }}" alt="{{ listing.title }}" width="240">
+</div><br>
+<div>
+    {{ listing.description }}
+</div><br>
+<div>
+    <strong>${{ listing.starting_price }}</strong>
+</div><br>
+{% if user.is_authenticated %}
+<p style="font-size: small;">{{ count }} Bids(s) so far. </p>
+{% if user == last_bid_user %}
+<p style="font-size: small;">Your bid is the last bid</p>
+{% endif %}
+{% if listing.closed == False %}
+<form action="/view/{{ listing.title }}" method="POST" class="form-group">
+    {% csrf_token %}
+    {{ form_b }}
+    <button class="btn btn-primary" type="submit">Bid</button>
+</form><br>
+{% else %}
+{% if user == last_bid_user %}
+<strong>You've won the bid!! Congrats!</strong>
+{% else %}
+This bid is closed.
+{% endif %} 
+{% endif %}
+{% endif %}
+<h4>
+    Details
+</h4>
+<ul>
+    <li style="font-size: small;">Listed by: {{ listing.listing_user }}</li>
+{% if listing.category %}
+    <li style="font-size: small;">Category: {{ listing.category }}</li>
+{% else %}
+<li style="font-size: small;">Category: Category Not Listed</li>
+{% endif %}
+</ul>
+<h4>Comments</h4>
+<ul>
+    {% for comment in comments %}
+    <li>{{ comment.comment }} <p style="font-size: small;">(posted by {{ comment.comment_user }})</p></li>
+    {% endfor %}
+</ul>
+
+{% if user.is_authenticated %}
+<form action="/view/{{ listing.title }}" method="POST" class="form-group">
+    {% csrf_token %}
+    {{ form_c }}
+    <button class="btn btn-primary" type="submit">Add Comment</button>
+</form><br>
+{% if user == listing.listing_user %}
+{% if listing.closed == False %}
+
+<form class="form-group" action="{% url 'my_listings' %}" method="POST">
+    {% csrf_token %}
+    <span hidden><input type="text" name="open_title" id="title" value="{{ listing.title }}"></span>
+    <button class="btn btn-dark" type="submit">Close Bid</button>
+</form><br><br>
+{% else %}
+    <strong>Bid Closed</strong>
+    <form class="form-group" action="{% url 'my_listings' %}" method="POST">
+        {% csrf_token %}
+        <span hidden><input type="text" name="close_title" id="title" value="{{ listing.title }}"></span>
+        <button class="btn btn-primary" type="submit">Reopen Bid</button>
+    </form><br><br>
+{% endif %}
+{% endif %}
+{% endif %}
+{% endblock %}

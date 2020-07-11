@@ -1,0 +1,31 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+{% if messages %}
+{% for message in messages %}
+<p style="color: green;"><strong>{{ message }}</strong></p>
+{% endfor %}
+{% endif %}
+    <h2>Active Listings</h2>
+        {% for listing in listings %}
+        {% if listing.closed == False %}
+        <div class="container-fluid" style="display: flex; border: solid gray; box-shadow: 2px 3px #888888;">
+            {% if listing.listing_photo %}
+            <div style="width: 40%;">  
+                <p><a href="/view/{{ listing.title }}"><img src="{{ listing.listing_photo.url }}" alt="{{ listing.title }}" width="240"></a></p>
+            </div><br>
+            {% endif %}
+            <div style="width: 30%;">
+                <p><strong><a href="/view/{{ listing.title }}">{{ listing.title }}</a></strong></p>
+            <p><strong>price: ${{ listing.starting_price }}</strong></p>
+            <p>{{ listing.description }}</p>
+            <p style="font-size: small; color: darkolivegreen;">Created {{ listing.date_created }}</p>
+            </div>
+            
+        </div><br><br><br>
+        
+        {% endif %}
+        {% empty %}
+        <p style="text-align: center;"><strong>No active listings.</strong></p>
+        {% endfor %}
+{% endblock %}

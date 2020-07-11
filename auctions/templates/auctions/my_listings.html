@@ -1,0 +1,39 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+{% if messages %}
+{% for message in messages %}
+<p style="color: green;"><strong>{{ message }}</strong></p>
+{% endfor %}
+{% endif %}
+    <h2>My Active Listings</h2>
+    
+        {% for listing in listings %}
+        <div>
+            <p><strong><a href="/view/{{ listing.title }}">{{ listing.title }}</a></strong></p>
+        <p><strong>price: ${{ listing.starting_price }}</strong></p>
+        <p>{{ listing.description }}</p>
+        <p style="font-size: small; color: darkolivegreen;">Created {{ listing.date_created }}</p>
+        {% if listing.listing_photo %}
+        <p> <a href="/view/{{ listing.title }}"><img src="{{ listing.listing_photo.url }}" alt="{{ listing.title }}" width="240"></a></p>
+        {% endif %}
+        </div><br>
+        {% if listing.closed == False %}
+        <form class="form-group" action="{% url 'my_listings' %}" method="POST">
+            {% csrf_token %}
+            <span hidden><input type="text" name="open_title" id="title" value="{{ listing.title }}"></span>
+            <button class="btn btn-dark" type="submit">Close Bid</button>
+        </form><br><br>
+        {% else %}
+        <strong>Bid Closed</strong>
+        <form class="form-group" action="{% url 'my_listings' %}" method="POST">
+            {% csrf_token %}
+            <span hidden><input type="text" name="close_title" id="title" value="{{ listing.title }}"></span>
+            <button class="btn btn-primary" type="submit">Reopen Bid</button>
+        </form><br><br>
+        {% endif %}
+        {% empty %}
+        <p style="text-align: center;"><strong>You have no active listings.</strong></p>
+        {% endfor %}
+    
+{% endblock %}
