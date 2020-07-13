@@ -24,7 +24,13 @@
     <strong>${{ listing.starting_price }}</strong>
 </div><br>
 {% if user.is_authenticated %}
-<p style="font-size: small;">{{ count }} Bids(s) so far. </p>
+<p style="font-size: small;">{{ count_bid }} Bids(s) so far. </p>
+{% if user == listing.listing_user %}
+<strong>Bids</strong>
+{% for bid in bids %}
+<p style="font-size: small;"><strong>{{ bid.bid_user }}: ${{ bid.bid_price }}</strong></p>
+{% endfor %}
+{% endif %}
 {% if user == last_bid_user %}
 <p style="font-size: small;">Your bid is the last bid</p>
 {% endif %}
@@ -66,7 +72,9 @@ This bid is closed.
     {{ form_c }}
     <button class="btn btn-primary" type="submit">Add Comment</button>
 </form><br>
+
 {% if user == listing.listing_user %}
+
 {% if listing.closed == False %}
 
 <form class="form-group" action="{% url 'my_listings' %}" method="POST">

@@ -13,9 +13,21 @@ from django.contrib import messages
 
 
 def index(request):
+    user = request.user.id
+    if not user:
+        user = None
+        watch_count = None
+    else:
+        watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
 
+        watch_count = 0
+        for item in watch_listings:
+            if item.listing.closed == True:
+                watch_count = watch_count + 1
     return render(request, "auctions/index.html", {
-        "listings": Listings.objects.all()
+        "listings": Listings.objects.all(),
+        "count": watch_count
+
     })
 
 
@@ -36,6 +48,7 @@ def login_view(request):
                 "message": "Invalid username and/or password."
             })
     else:
+
         return render(request, "auctions/login.html")
 
 
@@ -95,8 +108,15 @@ def create_listing(request):
         
     else:
         form = ListingsForm()
+        watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
+
+        watch_count = 0
+        for item in watch_listings:
+            if item.listing.closed == True:
+                watch_count = watch_count + 1
         return render(request, "auctions/create.html", {
-            "form": form
+            "form": form,
+            "count": watch_count
         })
 
 def listing_page(request, title):
@@ -148,7 +168,7 @@ def listing_page(request, title):
     else:
         form_b = BidsForm()
         form_c = CommentsForm()
-       
+        bid_list = Bids.objects.filter(bid_listing=Listings.objects.get(title=title))
         bid_count = len(Bids.objects.filter(bid_listing=Listings.objects.get(title=title)))
         last_bid = Bids.objects.filter(bid_listing=Listings.objects.get(title=title)).last()
         comments = Comments.objects.filter(comment_listing=Listings.objects.get(title=title))
@@ -157,44 +177,77 @@ def listing_page(request, title):
             last_bid_user = last_bid.bid_user
         else:
             last_bid_user = None
+        user = request.user.id 
+        if not user:
+            user = None
+            watch_count = None
+        else:
+            watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
+
+            watch_count = 0
+            for item in watch_listings:
+                if item.listing.closed == True:
+                    watch_count = watch_count + 1
         return render(request, "auctions/listing_page.html",{
         "listing": Listings.objects.get(title=title),
         "title": Listings.objects.get(title=title),
         "form_b": form_b,
         "form_c": form_c,
-        "count": bid_count,
+        "count_bid": bid_count,
         "last_bid_user": last_bid_user,
         "comments": comments,
+        "bids": bid_list,
+        "count": watch_count
     })
 
 @login_required
 def watchlist(request):
     if request.method == "POST":
-        title = request.POST["listing"]
-        watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
-        for i in watch_listings:
-            if i.listing.title == title:
-                return render(request, "auctions/watchlist.html", {
-                "message": "Already added to watchlist",
-                "listings": watch_listings
-                })
+        title = request.POST.get("listing", False)
+        if title:
+            watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
+            for i in watch_listings:
+                if i.listing.title == title:
+                    return render(request, "auctions/watchlist.html", {
+                    "message": "Already added to watchlist",
+                    "listings": watch_listings
+                    })
 
-        w = Watchlist(listing=Listings.objects.get(title=title), watchlist_user=User.objects.get(id=request.user.id))
-        w.save()
-        messages.success(request, "Added to watchlist!")
-        return HttpResponseRedirect(reverse("index"))
+            w = Watchlist(listing=Listings.objects.get(title=title), watchlist_user=User.objects.get(id=request.user.id))
+            w.save()
+            messages.success(request, "Added to watchlist!")
+            return HttpResponseRedirect(reverse("index"))
+        remove = request.POST.get("remove", False)
+        if remove:
+            Watchlist.objects.get(watchlist_user=User.objects.get(id=request.user.id), listing=Listings.objects.get(title=remove)).delete()
+            messages.success(request, "Removed from watchlist!")
+            return HttpResponseRedirect(reverse("index"))
     else:
+       
         watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
+
+        watch_count = 0
+        for item in watch_listings:
+            if item.listing.closed == True:
+                watch_count = watch_count + 1
         
         return render(request, "auctions/watchlist.html", {
-            "listings": watch_listings
+            "listings": watch_listings,
+            "count": watch_count
         })
 
 def category(request, category):
     category_listings = Listings.objects.filter(category=category)
+    watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
+
+    watch_count = 0
+    for item in watch_listings:
+        if item.listing.closed == True:
+            watch_count = watch_count + 1
 
     return render(request, "auctions/category.html", {
-        "listings": category_listings
+        "listings": category_listings,
+        "count": watch_count
     }) 
 
 @login_required
@@ -217,7 +270,14 @@ def my_listings(request):
     else:
         my_listings = Listings.objects.filter(listing_user=User.objects.get(id=request.user.id))
         form = ClosedForm()
+        watch_listings = Watchlist.objects.filter(watchlist_user=User.objects.get(id=request.user.id))
+
+        watch_count = 0
+        for item in watch_listings:
+            if item.listing.closed == True:
+                watch_count = watch_count + 1
         return render(request, "auctions/my_listings.html", {
             "listings": my_listings,
-            "form": form
+            "form": form,
+            "count": watch_count
         })

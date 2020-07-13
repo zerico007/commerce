@@ -7,7 +7,7 @@
 
 {% for listing in listings %}
 
-<div class="container-fluid" style="display: flex; border: solid gray; box-shadow: 2px 3px #888888;">
+<div class="container-fluid" style="display: flexbox; border: solid gray; box-shadow: 2px 3px #888888;">
     {% if listing.listing.listing_photo %}
     <div style="width: 40%;">  
         <p><a href="/view/{{ listing.listing.title }}"><img src="{{ listing.listing.listing_photo.url }}" alt="{{ listing.listing.title }}" width="240"></a></p>
@@ -19,7 +19,16 @@
     <p>{{ listing.listing.description }}</p>
     <p style="font-size: small; color: darkolivegreen;">Created {{ listing.listing.date_created }}</p>
     </div>
-    
+    <div>
+        {% if listing.listing.closed == True %}
+        <strong>This listing's bid is closed.</strong>
+        {% endif %}
+    </div>
+    <form class="form-group" action="{% url 'watchlist' %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="remove" id="listing" value="{{ listing.listing.title }}">
+    <button class="btn btn-secondary" type="submit">Remove From Watchlist</button>
+    </form><br>
 </div><br><br><br>
 {% empty %}
         <p style="text-align: center;"><strong>No listings added to your watchlist yet.</strong></p>
